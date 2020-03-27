@@ -63,7 +63,6 @@ function f(du, u, p, t)
     J = {J}
     
     F, h, b, c = p
-    n = K * (J + 1)
     
     for k = 1:K
     
@@ -77,14 +76,13 @@ function f(du, u, p, t)
         x_next = u[k_next]
         
         Y_mean = 0.0  # for this X
-        o = K + k * J  # offset, or index to the first Y for this X
+        o = K + (k - 1) * J  # offset, or index to the first Y for this X
         for j = 1:J   # for each Y 'belonging' to X_k
             
             j_prev = j == 1 ? J : j - 1
             j_next = j == J ? 1 : j + 1
             j_next2 = j_next == J ? 1 : j_next + 1 
                     
-            ii = o + j  # index to Y_{j,k}
             y = u[o + j]
             y_prev = u[o + j_prev]
             y_next = u[o + j_next]
@@ -222,7 +220,6 @@ class L96OneSim(BaseSimulator):
         if julia_available:
             self.f_juliadef = Main.eval(f1_juliadef.format(K=K))
 
-
     def gen_single(self, param, use_julia=True, use_juliadef=True, method='RK45'):
         # method can be LSODA, BDF, Radau or RK45. used only when use_julia is False
         assert param.ndim == 1 and param.size == 1
@@ -230,6 +227,16 @@ class L96OneSim(BaseSimulator):
 
         X_init = F * (0.5 + self.rng.randn(self.K) * 1.0)
         tspan = (0, self.obs_nsteps[-1] * self.dt)
+
+        n = X_init.size
+        dX_dt = np.empty(n, dtype=X_init.dtype)
+        df_dX = J1_init(n).astype(X_init.dtype)  # initialize as a sparse matrix
+
+        def f(t, X):
+            return f1(X, F, dX_dt, n)
+
+        def J(t, X):
+            return J1(X, F, df_dX, n)
 
         if use_julia:
             assert julia_available
@@ -244,6 +251,7 @@ class L96OneSim(BaseSimulator):
 
                 def f_julia(X, p, t):
                     return f(t, X)
+
                 problem = de.ODEProblem(f_julia, X_init, tspan)
 
             self.sol = de.solve(problem)
@@ -251,16 +259,6 @@ class L96OneSim(BaseSimulator):
             return {'data': u[self.obs_X, :].T.reshape(-1)}
 
         else:
-
-            n = X_init.size
-            dX_dt = np.empty(n, dtype=X_init.dtype)
-            df_dX = J1_init(n).astype(X_init.dtype)  # initialize as a sparse matrix
-
-            def f(t, X):
-                return f1(X, F, dX_dt, n)
-
-            def J(t, X):
-                return J1(X, F, df_dX, n)
 
             opts = dict()
             if method in ['Radau', 'BDF'] and not numba_available:  # numba doesn't work with sparse matrices
@@ -304,19 +302,25 @@ class L96TwoSim(BaseSimulator):
         X_and_Y_init = np.concatenate((X_init, Y_init))
         tspan = (0, self.obs_nsteps[-1] * self.dt)
 
+        dX_and_Y_dt = np.empty_like(X_and_Y_init)
+
+        def f(t, X_and_Y):
+            return f2(X_and_Y, F, h, b, c, dX_and_Y_dt, self.K, self.J)
+
         if use_julia:
             assert julia_available
 
             if use_juliadef:
 
                 f_julia = self.f_juliadef
-                p = np.array([F, h, b, c], dtype=X_init.dtype)
-                problem = de.ODEProblem(f_julia, X_init, tspan, p)
+                p = np.array([F, h, b, c], dtype=X_and_Y_init.dtype)
+                problem = de.ODEProblem(f_julia, X_and_Y_init, tspan, p)
 
             else:
 
                 def f_julia(X_and_Y, p, t):
                     return f(t, X_and_Y)
+
                 problem = de.ODEProblem(f_julia, X_and_Y_init, tspan)
 
             self.sol = de.solve(problem)
@@ -325,14 +329,10 @@ class L96TwoSim(BaseSimulator):
 
         else:
 
-            dX_and_Y_dt = np.empty_like(X_and_Y_init)
-
-            def f(t, X_and_Y):
-                return f2(X_and_Y, F, h, b, c, dX_and_Y_dt, self.K, self.J)
-
             opts = dict()
-            if method in ['Radau', 'BDF']:
-               opts['jac'] = J
+            # Jacobian not implented in python yet
+            #if method in ['Radau', 'BDF']:
+            #   opts['jac'] = J
 
             self.sol = solve_ivp(f, tspan, X_and_Y_init, method=method,
                                  max_step=0.1,
