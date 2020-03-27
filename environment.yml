@@ -1,0 +1,9 @@
+name: L96sm
+dependencies:
+ - python>=3.6
+ - numba
+ - numpy
+ - matplotlib
+ - pip:
+   - diffeqpy
+   - "--editable=git+https://github.com/mackelab/delfi.git"
