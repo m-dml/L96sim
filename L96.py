@@ -28,30 +28,6 @@ else:
     from tqdm import tqdm
 
 
-
-try:
-    from numba import jit
-    f1 = jit(f1)
-    f2 = jit(f2)
-    numba_available = False
-except ImportError:
-    warnings.warn("numba is not available, using slower python code")
-    numba_available = True
-
-try:
-    print('Updating julia wrappers, compilation might take a while....')
-    from julia.api import Julia
-    jl = Julia(compiled_modules=False)
-    from diffeqpy import de
-    from julia import Main
-    julia_available = True
-    print('...julia wrappers have been updated.')
-except ModuleNotFoundError:
-    warnings.warn("Julia is not available, using slower python integrator. Per-seed results will change!!")
-    julia_available = False
-
-
-
 class L96OneSim(BaseSimulator):
     def __init__(self, dim=1, noise_obs=0.1, K=36, seed=None, dt=0.001,
                  obs_times=None, obs_X=None):
