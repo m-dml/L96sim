@@ -1,9 +1,15 @@
 Simulator for the Lorenz 96 model. Uses Julia if available, otherwise falls back to numba, and finally to pure python.
 
 ### Installation
-Install [delfi](https://github.com/mackelab/delfi).
+`pip install .`
+
+With this basic installation, you can use the gradient functions in `L96_base.py`.
+
+To use the simulator classes in `L96.py`, install [delfi](https://github.com/mackelab/delfi).
 
 For Julia support install the Julia language and [diffeqpy](https://github.com/SciML/diffeqpy).
+
+If you don't have Julia, numba will be used instead. If numba also isn't present, interpreted numpy will be used.
 
 ### Compilation
 If Julia and pydiffeq are installed, there will be about 1 minute Julia compile time on startup when using a python installation that has [statically linked libraries](https://pyjulia.readthedocs.io/en/latest/troubleshooting.html). Unfortunately, this includes Anaconda. Fortunately, there is no compilation required when starting a new simulation, instantiating a new simulation object or changing simulation parameters.

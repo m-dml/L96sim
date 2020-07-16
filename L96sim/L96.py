@@ -12,7 +12,8 @@ from delfi.simulator.BaseSimulator import BaseSimulator
 from scipy.integrate import solve_ivp
 import warnings
 
-from L96_base import f1, f2, J1, J1_init, f1_juliadef, f2_juliadef
+from L96sim import L96_base
+from L96sim.L96_base import f1, f2, J1, J1_init, f1_juliadef, f2_juliadef
 
 def in_notebook():
     """
@@ -42,8 +43,8 @@ class L96OneSim(BaseSimulator):
         super().__init__(dim_param=dim, seed=seed)
         self.noise_obs, self.K, self.obs_nsteps, self.obs_X, self.dt = noise_obs, K, obs_nsteps, obs_X, dt
 
-        if julia_available:
-            self.f_juliadef = Main.eval(f1_juliadef.format(K=K))
+        if L96_base.julia_available:
+            self.f_juliadef = L96_base.Main.eval(f1_juliadef.format(K=K))
 
     def gen_single(self, param, use_julia=True, use_juliadef=True, method='RK45'):
         # method can be LSODA, BDF, Radau or RK45. used only when use_julia is False
@@ -64,29 +65,29 @@ class L96OneSim(BaseSimulator):
             return J1(X, F, df_dX, n)
 
         if use_julia:
-            assert julia_available
+            assert L96_base.julia_available
 
             if use_juliadef:
 
                 f_julia = self.f_juliadef
                 p = np.array([F], dtype=X_init.dtype)
-                problem = de.ODEProblem(f_julia, X_init, tspan, p)
+                problem = L96_base.de.ODEProblem(f_julia, X_init, tspan, p)
 
             else:
 
                 def f_julia(X, p, t):
                     return f(t, X)
 
-                problem = de.ODEProblem(f_julia, X_init, tspan)
+                problem = L96_base.de.ODEProblem(f_julia, X_init, tspan)
 
-            self.sol = de.solve(problem)
+            self.sol = L96_base.de.solve(problem)
             u = np.array(self.sol(self.obs_nsteps * self.dt))
             return {'data': u[self.obs_X, :].T.reshape(-1)}
 
         else:
 
             opts = dict()
-            if method in ['Radau', 'BDF'] and not numba_available:  # numba doesn't work with sparse matrices
+            if method in ['Radau', 'BDF'] and not L96_base.numba_available:  # numba doesn't work with sparse matrices
                 opts['jac'] = J
 
             self.sol = solve_ivp(f, tspan, X_init, method=method,
@@ -114,8 +115,8 @@ class L96TwoSim(BaseSimulator):
         self.obs_Y = np.where( obs_Y.flatten() )[0]
         self.obs_X_and_Y = np.concatenate((self.obs_X, self.obs_Y + K))
 
-        if julia_available:
-            self.f_juliadef = Main.eval(f2_juliadef.format(K=K, J=J))
+        if L96_base.julia_available:
+            self.f_juliadef = L96_base.Main.eval(f2_juliadef.format(K=K, J=J))
 
     def gen_single(self, param, use_julia=True, use_juliadef=True, method='LSODA'):
         # method can be LSODA, BDF, Radau or RK45. used only when use_julia is False
@@ -133,22 +134,22 @@ class L96TwoSim(BaseSimulator):
             return f2(X_and_Y, F, h, b, c, dX_and_Y_dt, self.K, self.J)
 
         if use_julia:
-            assert julia_available
+            assert L96_base.julia_available
 
             if use_juliadef:
 
                 f_julia = self.f_juliadef
                 p = np.array([F, h, b, c], dtype=X_and_Y_init.dtype)
-                problem = de.ODEProblem(f_julia, X_and_Y_init, tspan, p)
+                problem = L96_base.de.ODEProblem(f_julia, X_and_Y_init, tspan, p)
 
             else:
 
                 def f_julia(X_and_Y, p, t):
                     return f(t, X_and_Y)
 
-                problem = de.ODEProblem(f_julia, X_and_Y_init, tspan)
+                problem = L96_base.de.ODEProblem(f_julia, X_and_Y_init, tspan)
 
-            self.sol = de.solve(problem)
+            self.sol = L96_base.de.solve(problem)
             u = np.array(self.sol(self.obs_nsteps * self.dt))
             obs_data = u[self.obs_X_and_Y, :]
 
