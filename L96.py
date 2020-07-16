@@ -28,7 +28,6 @@ else:
     from tqdm import tqdm
 
 
-"""
 
 try:
     from numba import jit
@@ -51,7 +50,6 @@ except ModuleNotFoundError:
     warnings.warn("Julia is not available, using slower python integrator. Per-seed results will change!!")
     julia_available = False
 
-"""
 
 
 class L96OneSim(BaseSimulator):
