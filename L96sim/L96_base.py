@@ -135,6 +135,54 @@ def f2(X_and_Y, F, h, b, c, dX_and_Y_dt, K, J):
     return dX_and_Y_dt
 
 
+def pf2(X_and_Y, F, h, b, c, dX_and_Y_dt, K, J):
+    # parallelized version of two-level L96 model (takes parallelization from input shape)
+    # ordering is all X, then all Y for first X, etc.
+    # awkward programming style is to support efficient JIT compilation
+    n = K * (J + 1)
+    for k in range(K):  # for each X
+        k_next = k + 1
+        if k_next == K:
+            k_next = 0
+        k_prev = k - 1
+        if k_prev == -1:
+            k_prev = K - 1
+        k_prev2 = k_prev - 1
+        if k_prev2 == -1:
+            k_prev2 = K - 1
+
+        x = X_and_Y[k,:]
+        x_prev = X_and_Y[k_prev,:]
+        x_prev2 = X_and_Y[k_prev2,:]
+        x_next = X_and_Y[k_next,:]
+
+        o = K + k * J  # offset, or index to the first Y for this X
+        Y_mean = np.zeros(X_and_Y[o,:].shape)  # for this X
+        for j in range(J):  # for each Y 'belonging' to X_k
+            ii = o + j  # index into X_and_Y for Y_{j,k}
+            ii_next = ii + 1
+            if ii_next == n:
+                ii_next = K  # wrap around to first Y value
+            ii_next2 = ii_next + 1
+            if ii_next2 == n:
+                ii_next2 = K
+            ii_prev = ii - 1
+            if ii_prev == K - 1:
+                ii_prev = n - 1
+            y = X_and_Y[ii,:]
+            y_prev = X_and_Y[ii_prev,:]
+            y_next = X_and_Y[ii_next,:]
+            y_next2 = X_and_Y[ii_next2,:]
+
+            dX_and_Y_dt[ii,:] = (-b * y_next * (y_next2 - y_prev) - y + (h / J) * x) * c
+
+            Y_mean += y
+
+        Y_mean /= J
+
+        dX_and_Y_dt[k,:] = -x_prev * (x_prev2 - x_next) - x + F - h * c * Y_mean
+
+
 def J1(X, F, df_dX, n):
     for i in range(n):
         i_next = i + 1
@@ -168,6 +216,7 @@ try:
     from numba import jit
     f1 = jit(f1)
     f2 = jit(f2)
+    pf2 = jit(pf2)
     numba_available = False
 except ImportError:
     warnings.warn("numba is not available, using slower python code")
