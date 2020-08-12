@@ -182,6 +182,8 @@ def pf2(X_and_Y, F, h, b, c, dX_and_Y_dt, K, J):
 
         dX_and_Y_dt[k,:] = -x_prev * (x_prev2 - x_next) - x + F - h * c * Y_mean
 
+    return dX_and_Y_dt
+
 
 def J1(X, F, df_dX, n):
     for i in range(n):
