@@ -227,7 +227,7 @@ except ImportError:
 try:
     print('Updating julia wrappers, compilation might take a while....')
     from julia.api import Julia
-    jl = Julia(compiled_modules=False, runtime='/gpfs/home/nonnenma/julia-1.5.0/bin/julia')
+    jl = Julia(compiled_modules=False)
     from diffeqpy import de
     from julia import Main
     julia_available = True
