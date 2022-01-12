@@ -169,7 +169,7 @@ try:
     f1 = jit(f1)
     f2 = jit(f2)
     numba_available = False
-except ImportError:
+except (ImportError, OSError):
     warnings.warn("numba is not available, using slower python code")
     numba_available = True
 
