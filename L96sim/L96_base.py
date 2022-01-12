@@ -181,7 +181,7 @@ try:
     from julia import Main
     julia_available = True
     print('...julia wrappers have been updated.')
-except ModuleNotFoundError:
+except (ModuleNotFoundError, FileNotFoundError):
     warnings.warn("Julia is not available, using slower python integrator. Per-seed results will change!!")
     julia_available = False
 
