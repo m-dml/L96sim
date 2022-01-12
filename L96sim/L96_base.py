@@ -169,7 +169,7 @@ try:
     f1 = jit(f1)
     f2 = jit(f2)
     numba_available = False
-except ImportError:
+except (ImportError, OSError):
     warnings.warn("numba is not available, using slower python code")
     numba_available = True
 
@@ -181,7 +181,7 @@ try:
     from julia import Main
     julia_available = True
     print('...julia wrappers have been updated.')
-except ModuleNotFoundError:
+except (ModuleNotFoundError, FileNotFoundError):
     warnings.warn("Julia is not available, using slower python integrator. Per-seed results will change!!")
     julia_available = False
 

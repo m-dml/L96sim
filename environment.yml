@@ -1,9 +1,10 @@
-name: L96sm
+name: L96sim
 dependencies:
  - python>=3.6
  - numba
  - numpy
  - matplotlib
+ - scipy
+ - tqdm
  - pip:
    - diffeqpy
-   - "--editable=git+https://github.com/mackelab/delfi.git"
