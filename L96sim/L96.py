@@ -12,7 +12,6 @@ import numpy as np
 from scipy.integrate import solve_ivp
 import warnings
 
-from L96sim.meta import ABCMetaDoc
 from L96sim import L96_base
 from L96sim.L96_base import f1, f2, J1, J1_init, f1_juliadef, f2_juliadef
 
@@ -30,7 +29,7 @@ else:
     from tqdm import tqdm
 
 
-class BaseSimulator(metaclass=ABCMetaDoc):
+class BaseSimulator(object):
     def __init__(self, dim_param, seed=None):
         """Abstract base class for simulator models
         Simulator models must at least implement abstract methods and properties
@@ -76,7 +75,6 @@ class BaseSimulator(metaclass=ABCMetaDoc):
 
         return data_list
 
-    @abc.abstractmethod
     def gen_single(self, params):
         """Forward model for simulator for single parameter set
         Parameters

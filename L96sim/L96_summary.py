@@ -1,8 +1,7 @@
 import numpy as np
-from L96sim.meta import ABCMetaDoc
 
 
-class BaseSummaryStats(metaclass=ABCMetaDoc):
+class BaseSummaryStats(object):
     def __init__(self, seed=None):
         """Abstract base class for summary stats
         Summary Stats must at least implement abstract methods and properties of
@@ -22,7 +21,6 @@ class BaseSummaryStats(metaclass=ABCMetaDoc):
         self.seed = seed
         self.n_summary = None
 
-    @abc.abstractmethod
     def calc(self, repetition_list):
         """Method computing summary statistics
         Parameters
@@ -156,7 +154,6 @@ class Summary_identity(BaseSummaryStats):
         super().__init__(seed=seed)
         self.idx = idx
 
-    @copy_ancestor_docstring
     def calc(self, repetition_list):
         # See BaseSummaryStats.py for docstring
 
