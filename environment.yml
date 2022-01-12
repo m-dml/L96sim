@@ -1,4 +1,4 @@
-name: L96sm
+name: L96sim
 dependencies:
  - python>=3.6
  - numba
