@@ -4,5 +4,6 @@ dependencies:
  - numba
  - numpy
  - matplotlib
+ - scipy
  - pip:
    - diffeqpy
