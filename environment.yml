@@ -6,4 +6,3 @@ dependencies:
  - matplotlib
  - pip:
    - diffeqpy
-   - "--editable=git+https://github.com/mackelab/delfi.git"
